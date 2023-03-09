@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body></body>
+</html>
+<script type="module">
+  import { createStore, combineReducers, applyMiddleWare } from './redux.js'
+
+  const INCREASE = 'INCREASE'
+
+  const increaseLimit = count => (dispatch, getState) => {
+    if (getState().num.count >= 10) return
+
+    return dispatch({
+      type: INCREASE,
+      payload: count,
+    })
+  }
+
+  const increaseAsync = count => dispatch => {
+    const timer = setTimeout(() => {
+      clearTimeout(timer)
+      dispatch({
+        type: INCREASE,
+        payload: count,
+      })
+    }, 2000)
+  }
+
+  const num = (state = { count: 0 }, action) => {
+    const newState = { ...state }
+    switch (action.type) {
+      case INCREASE: {
+        newState.count += action.payload
+        break
+      }
+      default:
+    }
+
+    return newState
+  }
+
+  const reducers = combineReducers({
+    num,
+  })
+
+  const thunk =
+    ({ getState }) =>
+    nextDispatch =>
+    action => {
+      if (typeof action === 'function') return action(nextDispatch, getState)
+
+      return nextDispatch(action)
+    }
+
+  const logAfterDispatch =
+    ({ getState }) =>
+    nextDispatch =>
+    action => {
+      const timer = setTimeout(() => {
+        clearTimeout(timer)
+        console.table(getState())
+      })
+
+      return nextDispatch(action)
+    }
+
+  const middlewares = [thunk, logAfterDispatch]
+
+  const enhancer = applyMiddleWare(...middlewares)
+
+  const store = createStore(reducers, {}, enhancer)
+
+  store.dispatch(increaseLimit(1))
+  store.dispatch(increaseAsync(2))
+</script>
