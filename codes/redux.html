@@ -10,6 +10,7 @@
 </html>
 <script type="module">
   import { createStore, combineReducers, applyMiddleWare } from './redux.js'
+  import { thunk } from './redux-thunk.js'
 
   const INCREASE = 'INCREASE'
 
@@ -49,14 +50,7 @@
     num,
   })
 
-  const thunk =
-    ({ getState }) =>
-    nextDispatch =>
-    action => {
-      if (typeof action === 'function') return action(nextDispatch, getState)
-
-      return nextDispatch(action)
-    }
+  
 
   const logAfterDispatch =
     ({ getState }) =>

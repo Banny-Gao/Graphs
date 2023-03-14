@@ -1,0 +1,124 @@
+<html lang="en">
+  <body>
+    <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/react-redux@8/dist/react-redux.js"></script>
+    <script
+      type="text/babel"
+      data-plugins="transform-es2015-modules-umd"
+      data-presets="stage-0,react"
+      src="./redux-thunk.js"
+    ></script>
+    <script
+      type="text/babel"
+      data-plugins="transform-es2015-modules-umd"
+      data-presets="stage-0,react"
+      src="./redux.js"
+    ></script>
+    <div id="container"></div>
+    <script
+      type="text/babel"
+      data-plugins="transform-es2015-modules-umd"
+      data-presets="stage-0,react"
+    >
+      import { createStore, applyMiddleWare } from './redux.js'
+      import { thunk } from './redux-thunk.js'
+
+      const { PureComponent } = React
+      const { createRoot } = ReactDOM
+      const { Provider, useSelector, useDispatch, connect } = ReactRedux
+
+      const root = createRoot(document.getElementById('container'))
+
+      const INCREASE = 'INCREASE'
+      const DECREASE = 'DECREASE'
+      const RESET = 'RESET'
+
+      const operation =
+        type =>
+        (count = 1) =>
+        dispatch =>
+          dispatch({
+            type,
+            payload: count,
+          })
+
+      const increase = operation(INCREASE)
+      const decrease = operation(DECREASE)
+      const reset = () => dispatch => dispatch({ type: RESET })
+
+      const reducer = (state, action) => {
+        let { clickCount, count } = state
+        clickCount++
+        switch (action.type) {
+          case INCREASE: {
+            count += action.payload
+            break
+          }
+          case DECREASE: {
+            count -= action.payload
+            break
+          }
+          case RESET: {
+            count = 0
+            break
+          }
+          default:
+            clickCount--
+        }
+
+        return { ...state, clickCount, count }
+      }
+
+      const store = createStore(
+        reducer,
+        { count: 0, clickCount: 0 },
+        applyMiddleWare(thunk)
+      )
+
+      class App extends PureComponent {
+        render() {
+          const { clickCount, reset } = this.props
+          return (
+            <div>
+              <Counter onReset={reset} />
+              <span>clickCount {clickCount}</span>
+            </div>
+          )
+        }
+      }
+
+      const ConnectApp = connect(
+        state => ({
+          clickCount: state.clickCount,
+        }),
+        dispatch => ({
+          reset: () => dispatch(reset()),
+        })
+      )(App)
+
+      const Counter = ({ onReset }) => {
+        const count = useSelector(state => state.count)
+        const dispatch = useDispatch()
+
+        return (
+          <div>
+            <div>
+              <button onClick={() => dispatch(increase(1))}>+</button>
+              <span>{count}</span>
+              <button onClick={() => dispatch(decrease(1))}>-</button>
+              <button onClick={onReset}>reset</button>
+            </div>
+          </div>
+        )
+      }
+
+      root.render(
+        <Provider store={store}>
+          <ConnectApp />
+        </Provider>
+      )
+    </script>
+  </body>
+</html>
